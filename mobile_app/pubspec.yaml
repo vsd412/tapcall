@@ -1,0 +1,33 @@
+name: tapcall
+description: TapCall - One-tap video call app with BLE support
+publish_to: 'none'
+version: 2.0.0+2
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.2
+  permission_handler: ^11.1.0
+  flutter_blue_plus: ^1.31.0  # BLE support for iOS & Android
+  wakelock_plus: ^1.2.0  # Keep screen/CPU awake during BLE connection
+  flutter_foreground_task: ^8.0.0  # Foreground service for background operation
+  image_picker: ^1.0.4  # Pick images for contact photos
+  flutter_tts: ^4.0.2  # Text-to-Speech for announcements
+  geolocator: ^10.1.0  # Location services for weather
+  intl: ^0.19.0  # Date/time formatting
+  http: ^1.2.0  # HTTP requests for weather API
+  volume_controller: ^2.0.7  # System volume control from potentiometer
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
