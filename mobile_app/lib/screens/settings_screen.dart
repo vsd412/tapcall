@@ -10,6 +10,7 @@
 /// - UI Language + Voice & Subtitle language
 /// - SOS Emergency contact
 /// - Contacts list (paged every 3 items) + Extra Functions
+///
 library;
 
 import 'package:flutter/material.dart';
@@ -19,10 +20,10 @@ import '../src/open_accessibility_service.dart';
 import '../src/function_type.dart';
 import '../src/language.dart';
 import '../src/translations.dart';
-import '../src/launcher.dart';
 import 'contact_box.dart';
 import 'contact_editor_dialog.dart';
 import 'reorder_screen.dart';
+import 'info_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -38,16 +39,118 @@ class _SettingsScreenState extends State<SettingsScreen> {
   List<int> _slotNumbers = []; // Track slot numbers separately
   TTSLanguage _currentLanguage = TTSLanguage.english;
   UILanguage _currentUILanguage = UILanguage.english;
-  bool _isSystemNavMode = false;
-  
-  // SOS Contact (standalone)
   String _sosName = '';
   String _sosPhone = '';
-  String _sosMessage = '';
+  String _contactDispName = "";
+  String _timeDateDispName = "";
+  String _weatherDispName = "";
+  String _addSOSLabel = "";
+  String _addContactLabel = "";
+  String _addExtraLabel = "";
+  String _reorderFunctionHover = "";
+  String _uiLanguageTitle = "";
+  String _voLanguageTitle = "";
+  String _enablePermLabel = "";
+  String _enableAccessLabel = "";
+  String _enableSetupDescription = "";
+  String _enableSetupTitle = "";
+  String _settingScreenTitle = "";
+  String _sosContactTitle = "";
+  String _contactTitle = "";
+  String _extraFunctionTitle = "";
+  String _contactPagePrefix = "";
+  String _sosSetupTitle = "";
+  String _sosSetupDescription = "";
+  String _sosNameGuide = "";
+  String _sosPhoneGuide = "";
+  String _sosDeleteLabel = "";
+  String _sosCancelLabel = "";
+  String _sosSaveLabel = "";
+  String _emptySlotLabel = "";
+  String _removeFunctionTitle = "";
+  String _removeFunctionDescription = "";
+  String _removeCancelLabel = "";
+  String _removeConfirmLabel = "";
+  String _sosMissingReport = "";
+  String _requestPermReport = "";
+
+  Future<void> _loadTranslations() async {
+    final results = await Future.wait([
+      Translations.get('contactDispName'),
+      Translations.get('timeDateDispName'),
+      Translations.get('weatherDispName'),
+      Translations.get('addSOSLabel'),
+      Translations.get('addContactLabel'),
+      Translations.get('addExtraLabel'),
+      Translations.get('reorderFunctionHover'),
+      Translations.get('uiLanguageTitle'),
+      Translations.get('voLanguageTitle'),
+      Translations.get('enablePermLabel'),
+      Translations.get('enableAccessLabel'),
+      Translations.get('enableSetupDescription'),
+      Translations.get('enableSetupTitle'),
+      Translations.get('settingScreenTitle'),
+      Translations.get('sosContactTitle'),
+      Translations.get('contactTitle'),
+      Translations.get('extraFunctionTitle'),
+      Translations.get('contactPagePrefix'),
+      Translations.get('sosSetupTitle'),
+      Translations.get('sosSetupDescription'),
+      Translations.get('sosNameGuide'),
+      Translations.get('sosPhoneGuide'),
+      Translations.get('sosDeleteLabel'),
+      Translations.get('sosCancelLabel'),
+      Translations.get('sosSaveLabel'),
+      Translations.get('emptySlotLabel'),
+      Translations.get('removeFunctionTitle'),
+      Translations.get('removeFunctionDescription'),
+      Translations.get('removeCancelLabel'),
+      Translations.get('removeConfirmLabel'),
+      Translations.get('sosMissingReport'),
+      Translations.get('requestPermReport'),
+    ]);
+
+    setState(() {
+      _contactDispName = results[0];
+      _timeDateDispName = results[1];
+      _weatherDispName = results[2];
+      _addSOSLabel = results[3];
+      _addContactLabel = results[4];
+      _addExtraLabel = results[5];
+      _reorderFunctionHover = results[6];
+      _uiLanguageTitle = results[7];
+      _voLanguageTitle = results[8];
+      _enablePermLabel = results[9];
+      _enableAccessLabel = results[10];
+      _enableSetupDescription = results[11];
+      _enableSetupTitle = results[12];
+      _settingScreenTitle = results[13];
+      _sosContactTitle = results[14];
+      _contactTitle = results[15];
+      _extraFunctionTitle = results[16];
+      _contactPagePrefix = results[17];
+      _sosSetupTitle = results[18];
+      _sosSetupDescription = results[19];
+      _sosNameGuide = results[20];
+      _sosPhoneGuide = results[21];
+      _sosDeleteLabel = results[22];
+      _sosCancelLabel = results[23];
+      _sosSaveLabel = results[24];
+      _emptySlotLabel = results[25];
+      _removeFunctionTitle = results[26];
+      _removeFunctionDescription = results[27];
+      _removeCancelLabel= results[28];
+      _removeConfirmLabel = results[29];
+      _sosMissingReport = results[30];
+      _requestPermReport = results[31];
+    });
+
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadTranslations();
     _loadSettings();
   }
 
@@ -65,7 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final uiLanguage = await Language.getUILanguage();
     
     // Load system navigation mode
-    final isSystemNav = await Launcher.isSystemNavModeEnabled();
+    //final isSystemNav = await Launcher.isSystemNavModeEnabled();
     
     // Load SOS contact
     final sosContact = await _contactManager.getSOSContact();
@@ -85,13 +188,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _currentLanguage = language;
       _currentUILanguage = uiLanguage;
-      _isSystemNavMode = isSystemNav;
+      //_isSystemNavMode = isSystemNav;
       _contacts = loadedContacts;
       _slotNumbers = loadedSlotNumbers;
       _sosName = sosContact?.name ?? '';
       _sosPhone = sosContact?.phoneNumber ?? '';
-      _sosMessage = sosContact?.emergencyMessage ?? '';
       _isLoading = false;
+      _loadTranslations();
     });
   }
 
@@ -113,10 +216,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Create the next free slot as an empty contact entry
     // Find next available slot number
     int newSlot = 1;
+
     while (_slotNumbers.contains(newSlot)) {
       newSlot++;
     }
-    
+
     // Save empty contact to create the slot
     await _contactManager.saveContact(
       newSlot,
@@ -127,6 +231,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     // Reload to show the new slot
     await _loadSettings();
+
+    _openContactEditor(newSlot-1);
   }
   
   void _addMoreExtraSlots() async {
@@ -149,6 +255,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     // Reload to show the new slot
     await _loadSettings();
+
+    _openContactEditor(newSlot-1);
   }
   
   Future<void> _removeSlot(int index) async {
@@ -158,25 +266,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF2C3E50),
-        title: const Text(
-          'Remove Slot?',
-          style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+        title:Text(
+          _removeFunctionTitle,
+          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'This will permanently remove this slot and its configuration.',
-          style: TextStyle(color: Colors.white70, fontSize: 18),
+        content: Text(
+          _removeFunctionDescription,
+          style: const TextStyle(color: Colors.white70, fontSize: 18),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(fontSize: 20)),
+            child: Text(_removeCancelLabel, style: const TextStyle(fontSize: 20, color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade700,
             ),
-            child: const Text('Remove', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            child: Text(_removeConfirmLabel, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ],
       ),
@@ -191,34 +299,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _loadSettings();
     }
   }
-
-  Future<void> _toggleSystemNavMode() async {
-    // Switch between “Back/Recent Apps” vs “Prev/Next page” for buttons 4&5
-    final newValue = !_isSystemNavMode;
-    await Launcher.setSystemNavMode(newValue);
-    setState(() {
-      _isSystemNavMode = newValue;
-    });
-    
-    // Show message
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            newValue 
-              ? 'System Nav Mode ON: Buttons 4&5 → Back/Recent Apps'
-              : 'System Nav Mode OFF: Buttons 4&5 → Prev/Next Page',
-          ),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
   Future<void> _openContactEditor(int index) async {
     // Edit a specific slot’s configuration via `ContactEditorDialog`
     // Safety check for index
-    if (index >= _contacts.length || index >= _slotNumbers.length) {
+    if (index > _contacts.length || index > _slotNumbers.length) {
       return;
     }
     
@@ -259,10 +343,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _editSOSContact() async {
-    // Standalone SOS contact editor (name + phone + emergency message)
+    // Standalone SOS contact editor (name + phone)
     final nameController = TextEditingController(text: _sosName);
     final phoneController = TextEditingController(text: _sosPhone);
-    final messageController = TextEditingController(text: _sosMessage);
     
     await showDialog(
       context: context,
@@ -272,9 +355,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.emergency, color: Colors.red.shade300, size: 28),
             const SizedBox(width: 12),
-            const Text(
-              'SOS Contact',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            Text(
+              _sosSetupTitle,
+              style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -282,16 +365,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'This contact will be called when Button 9 is pressed.',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+              Text(
+                _sosSetupDescription,
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
               const SizedBox(height: 20),
               TextField(
                 controller: nameController,
                 style: const TextStyle(color: Colors.white, fontSize: 20),
                 decoration: InputDecoration(
-                  labelText: 'Name',
+                  labelText: _sosNameGuide,
                   labelStyle: const TextStyle(color: Colors.white70, fontSize: 18),
                   prefixIcon: const Icon(Icons.person, color: Colors.white70),
                   enabledBorder: OutlineInputBorder(
@@ -310,7 +393,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 keyboardType: TextInputType.phone,
                 style: const TextStyle(color: Colors.white, fontSize: 20),
                 decoration: InputDecoration(
-                  labelText: 'Phone Number',
+                  labelText: _sosPhoneGuide,
                   labelStyle: const TextStyle(color: Colors.white70, fontSize: 18),
                   prefixIcon: const Icon(Icons.phone, color: Colors.white70),
                   enabledBorder: OutlineInputBorder(
@@ -322,32 +405,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     borderSide: BorderSide(color: Colors.red.shade300, width: 2),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: messageController,
-                maxLines: 3,
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-                decoration: InputDecoration(
-                  labelText: 'Emergency Message (optional)',
-                  hintText: 'e.g. 緊急求救！請幫忙！',
-                  hintStyle: const TextStyle(color: Colors.white24, fontSize: 16),
-                  labelStyle: const TextStyle(color: Colors.white70, fontSize: 18),
-                  prefixIcon: const Icon(Icons.message, color: Colors.white70),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white30, width: 2),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.red.shade300, width: 2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'If set, a WhatsApp message will be sent before making the call.',
-                style: TextStyle(color: Colors.white38, fontSize: 13),
               ),
             ],
           ),
@@ -361,44 +418,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 setState(() {
                   _sosName = '';
                   _sosPhone = '';
-                  _sosMessage = '';
                 });
                 if (context.mounted) Navigator.pop(context);
               },
-              child: Text('Delete', style: TextStyle(color: Colors.red.shade300, fontSize: 18)),
+              child: Text(_sosDeleteLabel, style: TextStyle(color: Colors.red.shade300, fontSize: 18)),
             ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(fontSize: 18)),
+            child: Text(_sosCancelLabel, style: const TextStyle(fontSize: 18)),
           ),
           ElevatedButton(
             onPressed: () async {
               final name = nameController.text.trim();
               final phone = phoneController.text.trim();
-              final message = messageController.text.trim();
               
               if (name.isEmpty || phone.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter both name and phone number'),
+                  SnackBar(
+                    content: Text(_sosMissingReport,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                     backgroundColor: Colors.red,
                   ),
                 );
                 return;
               }
               
-              await _contactManager.saveSOSContact(name, phone, message: message);
+              await _contactManager.saveSOSContact(name, phone);
               setState(() {
                 _sosName = name;
                 _sosPhone = phone;
-                _sosMessage = message;
               });
               if (context.mounted) Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade700,
             ),
-            child: const Text('Save', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text(_sosSaveLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -422,13 +477,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Permissions requested',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            _requestPermReport,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -447,7 +502,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Language: $label',
+                '$_voLanguageTitle $label',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               backgroundColor: Colors.green,
@@ -492,18 +547,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _currentUILanguage = language;
         });
         if (mounted) {
+          _loadSettings();
+          _loadTranslations();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'UI Language: $label',
+                '$_uiLanguageTitle: $label',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               backgroundColor: Colors.blue,
               duration: const Duration(seconds: 1),
             ),
           );
-          // Reload to refresh UI with new language
-          _loadSettings();
         }
       },
       child: Container(
@@ -537,13 +592,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await AccessibilityService.openAccessibilitySettings();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Enable "One-Tap Call" in Accessibility',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              _enableAccessLabel,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.blue,
-            duration: Duration(seconds: 4),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -561,156 +616,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
   }
-  
-  void _showScreenSizeDialog() {
-    final widthController = TextEditingController(text: '1080');
-    final heightController = TextEditingController(text: '1920');
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2C3E50),
-        title: const Row(
-          children: [
-            Icon(Icons.phone_android, color: Colors.blue, size: 28),
-            SizedBox(width: 12),
-            Text(
-              'Screen Size Settings',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Set your phone screen dimensions (in pixels)',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Width (pixels)',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: widthController,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-                decoration: InputDecoration(
-                  hintText: '1080',
-                  hintStyle: const TextStyle(color: Colors.white30),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.white54),
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Height (pixels)',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: heightController,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-                decoration: InputDecoration(
-                  hintText: '1920',
-                  hintStyle: const TextStyle(color: Colors.white30),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.white54),
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(fontSize: 16)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final width = int.tryParse(widthController.text.trim());
-              final height = int.tryParse(heightController.text.trim());
-              
-              if (width == null || height == null || width <= 0 || height <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter valid positive numbers'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              
-              // Call native method to save screen size
-              try {
-                await Launcher.setScreenSize(width, height);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '✅ Screen size saved: $width×$height',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-            ),
-            child: const Text(
-              'Save',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -726,37 +631,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF2C3E50),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        title: FutureBuilder<String>(
-          future: Translations.get('settings'),
-          builder: (context, snapshot) {
-            return Text(
-              snapshot.data ?? 'Settings',
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            );
-          },
+        backgroundColor: const Color.fromARGB(255, 35, 40, 50),
+        title: Text(
+          _settingScreenTitle,
+          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white,),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, size: 32),
+          icon: const Icon(Icons.arrow_back, size: 32, color: Colors.white,),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: Icon(
-              _isSystemNavMode ? Icons.touch_app : Icons.touch_app_outlined,
-              size: 32,
-            ),
-            tooltip: 'System Navigation Mode',
-            onPressed: _toggleSystemNavMode,
+            icon: const Icon(Icons.info, size: 32, color: Colors.white,),
+            tooltip: _reorderFunctionHover,
+            onPressed: () async {
+              final result = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const InfoScreen(),
+                ),
+              );
+              // If reorder was saved, reload settings
+              if (result == true) {
+                await _loadSettings();
+              }
+            },
           ),
           IconButton(
-            icon: const Icon(Icons.phone_android, size: 32),
-            tooltip: 'Screen Size Settings',
-            onPressed: _showScreenSizeDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.reorder, size: 32),
-            tooltip: 'Reorder Functions',
+            icon: const Icon(Icons.reorder, size: 32, color: Colors.white,),
+            tooltip: _reorderFunctionHover,
             onPressed: () async {
               final result = await Navigator.push<bool>(
                 context,
@@ -790,34 +693,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     const Icon(Icons.security, color: Colors.white, size: 32),
                     const SizedBox(width: 12),
-                    FutureBuilder<String>(
-                      future: Translations.get('required_setup'),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.data ?? 'Required Setup',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        );
-                      },
+                    Text(
+                      _enableSetupTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                FutureBuilder<String>(
-                  future: Translations.get('required_setup_desc'),
-                  builder: (context, snapshot) {
-                    return Text(
-                      snapshot.data ?? '1. Enable Phone & Bluetooth permissions\n2. Enable Accessibility service for auto-calling',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 18,
-                        height: 1.5,
-                      ),
-                    );
-                  },
+                Text(
+                  _enableSetupDescription,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 18,
+                    height: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 
@@ -827,14 +720,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _checkAndRequestPermissions,
                     icon: const Icon(Icons.phone_android, size: 28),
-                    label: FutureBuilder<String>(
-                      future: Translations.get('enable_permissions'),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.data ?? 'Enable Permissions',
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                        );
-                      },
+                    label: Text(
+                      _enablePermLabel,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade700,
@@ -855,14 +743,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _openAccessibilitySettings,
                     icon: const Icon(Icons.accessibility_new, size: 28),
-                    label: FutureBuilder<String>(
-                      future: Translations.get('enable_accessibility'),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.data ?? 'Enable Accessibility',
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                        );
-                      },
+                    label: Text(
+                      _enableAccessLabel,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade700,
@@ -896,18 +779,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Icon(Icons.translate, color: Colors.white, size: 28),
                     const SizedBox(width: 10),
                     Flexible(
-                      child: FutureBuilder<String>(
-                        future: Translations.get('ui_language'),
-                        builder: (context, snapshot) {
-                          return Text(
-                            snapshot.data ?? 'UI Language',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          );
-                        },
+                      child: Text(
+                        _uiLanguageTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ],
@@ -952,18 +830,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Icon(Icons.language, color: Colors.white, size: 28),
                     const SizedBox(width: 10),
                     Flexible(
-                      child: FutureBuilder<String>(
-                        future: Translations.get('voice_subtitle'),
-                        builder: (context, snapshot) {
-                          return Text(
-                            snapshot.data ?? 'Voice & Subtitle',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          );
-                        },
+                      child: Text(
+                        _voLanguageTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ],
@@ -1007,18 +880,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Icon(Icons.emergency, color: Colors.red.shade300, size: 32),
                     const SizedBox(width: 12),
-                    FutureBuilder<String>(
-                      future: Translations.get('sos_emergency'),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.data ?? 'SOS Emergency',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        );
-                      },
+                    Text(
+                      _sosContactTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ],
                 ),
@@ -1052,7 +920,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _sosName.isNotEmpty ? _sosName : 'Tap to set SOS contact',
+                                _sosName.isNotEmpty ? _sosName : _addSOSLabel,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -1066,16 +934,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     color: Colors.white70,
                                     fontSize: 16,
                                   ),
-                                ),
-                              if (_sosMessage.isNotEmpty)
-                                Text(
-                                  '💬 $_sosMessage',
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 14,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                             ],
                           ),
@@ -1106,18 +964,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     const Icon(Icons.contacts, color: Colors.white, size: 32),
                     const SizedBox(width: 12),
-                    FutureBuilder<String>(
-                      future: Translations.get('contacts'),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.data ?? 'Contacts',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        );
-                      },
+                    Text(
+                      _contactTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ],
                 ),
@@ -1148,11 +1001,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (endIdx <= startIdx) {
                       return const SizedBox.shrink();
                     }
-                    
+
                     return Column(
                       children: [
-                        // Page separator for page 2+
-                        if (pageIndex > 0)
+                        if (pageIndex >= 0)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             child: Row(
@@ -1168,7 +1020,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       border: Border.all(color: Colors.white30, width: 2),
                                     ),
                                     child: Text(
-                                      'Page ${pageIndex + 1}',
+                                      '$_contactPagePrefix ${pageIndex + 1}',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 20,
@@ -1186,11 +1038,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ...List.generate((endIdx - startIdx).clamp(0, 3), (localIndex) {
                           final actualIndex = contactIndices[startIdx + localIndex];
                           final contact = _contacts[actualIndex];
-                          
+                          String displayInfo = "";
+                          if ((contact?.functionType ?? FunctionType.contact) == FunctionType.contact) {
+                            displayInfo = _contactDispName;
+                          } else if ((contact?.functionType ?? FunctionType.contact) == FunctionType.time){
+                            displayInfo = _timeDateDispName;
+                          } else if ((contact?.functionType ?? FunctionType.contact) == FunctionType.weather){
+                            displayInfo = _weatherDispName;
+                          } else {
+                            displayInfo = "???";
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: ContactBox(
                               contact: contact,
+                              displayInfo: displayInfo,
+                              emptyInfo: _emptySlotLabel,
                               slotColor: _getSlotColor(localIndex + startIdx),
                               onTap: () => _openContactEditor(actualIndex),
                               onDelete: () => _removeSlot(actualIndex),
@@ -1209,9 +1072,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _addMoreContactSlots,
                     icon: const Icon(Icons.add_circle, size: 28, color: Colors.white),
-                    label: const Text(
-                      'Add More Contacts (1 more)',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    label: Text(
+                      _addContactLabel,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white, width: 3),
@@ -1227,7 +1090,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           
           const SizedBox(height: 32),
-          
+
           // EXTRA FUNCTIONS SECTION (Slots 7-9)
           Container(
             padding: const EdgeInsets.all(20),
@@ -1241,20 +1104,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 32),
+                    const Icon(Icons.star, color: Colors.white, size: 32),
                     const SizedBox(width: 12),
-                    FutureBuilder<String>(
-                      future: Translations.get('extra_functions'),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.data ?? 'Extra Functions',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        );
-                      },
+                    Text(
+                      _extraFunctionTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ],
                 ),
@@ -1265,6 +1123,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ...(() {
                   // Filter to only extra function entries (non-contact types)
                   final extraIndices = <int>[];
+
+
                   for (int i = 0; i < _contacts.length; i++) {
                     final contact = _contacts[i];
                     if (contact != null && contact.functionType != FunctionType.contact) {
@@ -1275,16 +1135,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (extraIndices.isEmpty) {
                     return <Widget>[];
                   }
-                  
+                  String displayInfo = "";
                   // Show all extra function slots
                   return List.generate(extraIndices.length, (localIndex) {
                     final actualIndex = extraIndices[localIndex];
                     final contact = _contacts[actualIndex];
-                    
+                    if ((contact?.functionType ?? FunctionType.contact) == FunctionType.contact) {
+                      displayInfo = _contactDispName;
+                    } else if ((contact?.functionType ?? FunctionType.contact) == FunctionType.time){
+                      displayInfo = _timeDateDispName;
+                    } else if ((contact?.functionType ?? FunctionType.contact) == FunctionType.weather){
+                      displayInfo = _weatherDispName;
+                    } else {
+                      displayInfo = "???";
+                    }
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: ContactBox(
                         contact: contact,
+                        displayInfo: displayInfo,
+                        emptyInfo: _emptySlotLabel,
                         slotColor: _getSlotColor(localIndex),
                         onTap: () => _openContactEditor(actualIndex),
                         onDelete: () => _removeSlot(actualIndex),
@@ -1299,13 +1169,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: _addMoreExtraSlots,
-                    icon: const Icon(Icons.add_circle, size: 28, color: Colors.amber),
-                    label: const Text(
-                      'Add More Extra Functions (1 more)',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    icon: const Icon(Icons.add_circle, size: 28, color: Colors.white),
+                    label: Text(
+                      _addExtraLabel,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.amber, width: 3),
+                      side: const BorderSide(color: Colors.white, width: 3),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1316,7 +1186,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          
           const SizedBox(height: 20),
         ],
       ),
