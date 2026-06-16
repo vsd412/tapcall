@@ -15,7 +15,6 @@
 /// - Periodic checks: accessibility and location permissions
 /// - `_loadContacts()` builds slot lists and paging
 /// - `_makeCall()` dispatches by `FunctionType`
-library;
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
@@ -82,7 +81,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
     if (!_callbackRegistered) {
       widget.onRegisterCallback?.call(_handleBLEButtonPress);
       _callbackRegistered = true;
-      debugPrint('🔗 MainCallScreen callback registered (hashCode: $hashCode)');
+      debugPrint('🔗 MainCallScreen callback registered (hashCode: ${hashCode})');
     }
     
     // Check statuses periodically (2 seconds for more responsive accessibility checks)
@@ -179,7 +178,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
     debugPrint('║ 📱 MainCallScreen BLE Handler');
     debugPrint('║ Timestamp: $timestamp');
     debugPrint('║ Slot Number: $slotNumber');
-    debugPrint('║ hashCode: $hashCode');
+    debugPrint('║ hashCode: ${hashCode}');
     debugPrint('╚═══════════════════════════════════════════════════════════');
     
     // Handle navigation signals from physical buttons
@@ -191,7 +190,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
       _previousPage();
       if (_currentPage < oldPage) {
         await _tts.speak('Previous page. Page ${_currentPage + 1}');
-        _showMessage('◀️ Previous page', Colors.blue.shade700);
+        _showMessage('◀️ Page ${_currentPage + 1} of $_totalPages', Colors.blue.shade700);
         debugPrint('✅ Moved to page ${_currentPage + 1}');
       } else {
         await _tts.speak('Already at first page');
@@ -207,7 +206,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
       _nextPage();
       if (_currentPage > oldPage) {
         await _tts.speak('Next page. Page ${_currentPage + 1}');
-        _showMessage('▶️ Next page', Colors.blue.shade700);
+        _showMessage('▶️ Page ${_currentPage + 1} of $_totalPages', Colors.blue.shade700);
         debugPrint('✅ Moved to page ${_currentPage + 1}');
       } else {
         await _tts.speak('Already at last page');
@@ -651,40 +650,49 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
           children: [
             // Top header: page indicator (left), status icons (middle), settings (right)
             Container(
+              color: const Color.fromARGB(255, 35, 40, 50),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  // SOS Emergency button (top-left)
                   GestureDetector(
-                    onTap: () {
-                      // Trigger SOS via the same path as physical button (slot 253)
-                      widget.onButtonPress?.call(253);
-                    },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade700,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.red.shade300, width: 2),
+                        color: Colors.red.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        shape: BoxShape.rectangle,
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.5), width: 2),
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.emergency, color: Colors.white, size: 22),
-                          SizedBox(width: 6),
-                          Text(
-                            'SOS',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
+                      child: const Text(
+                        "SOS",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                  
+                  /*
+                  const Spacer(),
+                  // Page indicator (smaller, top-left) Change to SOS
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Text(
+                      '${_currentPage + 1}/$_totalPages',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  */
                   const Spacer(),
                   
                   // Status icons in middle
@@ -699,7 +707,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                             color: Colors.white.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: widget.isConnected ? Colors.blue : Colors.white30,
+                              color: widget.isConnected ? Colors.blue: Colors.white30,
                               width: 2,
                             ),
                           ),
@@ -720,7 +728,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                           color: Colors.white.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: _isAccessibilityEnabled ? Colors.blue : Colors.white30,
+                              color: _isAccessibilityEnabled ? Colors.blue : Colors.white30,
                             width: 2,
                           ),
                         ),
@@ -743,6 +751,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                             color: _isLocationEnabled ? Colors.blue : Colors.white30,
                             width: 2,
                           ),
+
                         ),
                         child: Icon(
                           Icons.location_on,
@@ -760,36 +769,36 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                     onLongPressStart: (_) => _startSettingsHold(),
                     onLongPressEnd: (_) => _cancelSettingsHold(),
                     onLongPressCancel: _cancelSettingsHold,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (_settingsHoldStarted)
-                          SizedBox(
-                            width: 56,
-                            height: 56,
-                            child: CircularProgressIndicator(
+                    child: SizedBox(
+                      width: 56,  // fixed width
+                      height: 56, // fixed height
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (_settingsHoldStarted)
+                            CircularProgressIndicator(
                               value: _settingsHoldProgress / 30,
                               strokeWidth: 4,
                               backgroundColor: Colors.white30,
                               valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
                             ),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: _settingsHoldStarted
+                                  ? Colors.green.withValues(alpha: 0.3)
+                                  : Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(
+                              Icons.settings,
+                              color: Colors.white,
+                              size: 26,
+                            ),
                           ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: _settingsHoldStarted
-                                ? Colors.green.withValues(alpha: 0.3)
-                                : Colors.white.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Icon(
-                            Icons.settings,
-                            color: Colors.white,
-                            size: 26,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -883,17 +892,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
               ),
             ),
 
-            // Page number indicator (centered below nav arrows)
-            Text(
-              '${_currentPage + 1}',
-              style: const TextStyle(
-                color: Color.fromARGB(255, 255, 255, 255),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
           ],
         ),
       ),
