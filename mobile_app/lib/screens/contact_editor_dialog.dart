@@ -8,12 +8,12 @@
 /// Special behavior:
 /// - Extra function slots cannot select `Contact` type
 /// - Automatically updates label to function display name when switching types
-library;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../src/contact_manager.dart';
 import '../src/function_type.dart';
+import '../src/translations.dart';
 
 /// Dialog for editing contact and function configurations
 class ContactEditorDialog extends StatefulWidget {
@@ -44,6 +44,29 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
   late TextEditingController _phoneController;
   late TextEditingController _reminderMessageController;
   late AppType _selectedAppType;
+
+  String _nameChangeGuide = "";
+  String _timeDateDescription = "";
+  String _weatherDescription = "";
+  String _nameMissingReport = "";
+  String _phoneMissingReport = "";
+  String _functionTypeSubtitle = "";
+  String _photoChangeLabel = "";
+  String _deleteFunctionLabel = "";
+  String _saveFunctionLabel = "";
+  String _messagingAppSubtitle = "";
+  String _phoneNumberSubtitle = "";
+  String _phoneNumberGuide = "";
+  String _nameChangeSubtitle = "";
+  String _functionDeleteReport = "";
+  String _functionSaveReport = "";
+  String _buttonIndexTitle = "";
+  String _contactDispName = "";
+  String _timeDateDispName = "";
+  String _weatherDispName = "";
+  String _whatsappDispName = "";
+  String _wechatDispName = "";
+
   String? _photoPath;
   // TODO: Implement reminder time picker UI
   // ignore: unused_field
@@ -80,7 +103,58 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
         );
       }
     }
-    
+    Future<void> loadTranslations() async {
+      final results = await Future.wait([
+        Translations.get('nameChangeGuide'),
+        Translations.get('timeDateDescription'),
+        Translations.get('weatherDescription'),
+        Translations.get('nameMissingReport'),
+        Translations.get('phoneMissingReport'),
+        Translations.get('functionTypeSubtitle'),
+        Translations.get('photoChangeLabel'),
+        Translations.get('deleteFunctionLabel'),
+        Translations.get('saveFunctionLabel'),
+        Translations.get('messagingAppSubtitle'),
+        Translations.get('phoneNumberSubtitle'),
+        Translations.get('phoneNumberGuide'),
+        Translations.get('nameChangeSubtitle'),
+        Translations.get('functionDeleteReport'),
+        Translations.get('functionSaveReport'),
+        Translations.get('buttonIndexTitle'),
+        Translations.get('contactDispName'),
+        Translations.get('timeDateDispName'),
+        Translations.get('weatherDispName'),
+        Translations.get('whatsappDispName'),
+        Translations.get('wechatDispName'),
+      ]);
+
+      setState(() {
+        _nameChangeGuide = results[0];
+        _timeDateDescription = results[1];
+        _weatherDescription = results[2];
+        _nameMissingReport = results[3];
+        _phoneMissingReport = results[4];
+        _functionTypeSubtitle = results[5];
+        _photoChangeLabel = results[6];
+        _deleteFunctionLabel = results[7];
+        _saveFunctionLabel = results[8];
+        _messagingAppSubtitle = results[9];
+        _phoneNumberSubtitle = results[10];
+        _phoneNumberGuide = results[11];
+        _nameChangeSubtitle = results[12];
+        _functionDeleteReport = results[13];
+        _functionSaveReport = results[14];
+        _buttonIndexTitle = results[15];
+        _contactDispName = results[16];
+        _timeDateDispName = results[17];
+        _weatherDispName = results[18];
+        _whatsappDispName = results[19];
+        _wechatDispName = results[20];
+      });
+    }
+
+    loadTranslations();
+
     // Parse reminder days
     if (widget.contact?.reminderDays != null) {
       _selectedDays = widget.contact!.reminderDays!.toSet();
@@ -115,13 +189,13 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
     
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Name required',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            _nameMissingReport,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -132,13 +206,13 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
       final phone = _phoneController.text.trim();
       if (phone.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Phone number required for contact',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              _phoneMissingReport,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
         return;
@@ -172,14 +246,24 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
         );
         break;
     }
-    
+    String dispName = "";
+    if (_selectedFunction == FunctionType.contact){
+      dispName = _contactDispName;
+    } else
+    if (_selectedFunction == FunctionType.time){
+      dispName = _timeDateDispName;
+    } else
+    if (_selectedFunction == FunctionType.weather){
+      dispName = _weatherDispName;
+    } else {
+      dispName = "???";
+    }
     widget.onSave(contact);
     Navigator.pop(context);
-    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Saved: $name (${_selectedFunction.displayName})',
+          '$_functionSaveReport $name ($dispName)',
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.green,
@@ -193,13 +277,13 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
     Navigator.pop(context);
     
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Function deleted',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          _functionDeleteReport,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.red,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -231,7 +315,7 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Button ${widget.slot}',
+                    '$_buttonIndexTitle ${widget.slot}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 26,
@@ -250,9 +334,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
               
               // Function Type Selector (only for extra function slots)
               if (!_isContactOnlySlot) ...[
-                const Text(
-                  'FUNCTION TYPE',
-                  style: TextStyle(
+                Text(
+                  _functionTypeSubtitle,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -269,6 +353,19 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                       .where((type) => type != FunctionType.contact) // Exclude Contact type for extra function slots
                       .map((type) {
                     final isSelected = _selectedFunction == type;
+
+                    String dispName = "";
+                    if (type == FunctionType.contact){
+                      dispName = _contactDispName;
+                    } else
+                    if (type == FunctionType.time){
+                      dispName = _timeDateDispName;
+                    } else
+                    if (type == FunctionType.weather){
+                      dispName = _weatherDispName;
+                    } else {
+                      dispName = "???";
+                    }
                     return GestureDetector(
                       onTap: () {
                         setState(() {
@@ -276,7 +373,7 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                           // Update name field to the new function type's display name if current name is empty or matches old type
                           final currentName = _nameController.text.trim();
                           if (currentName.isEmpty || FunctionType.values.any((t) => t.displayName == currentName)) {
-                            _nameController.text = type.displayName;
+                            _nameController.text = dispName;
                           }
                         });
                       },
@@ -299,7 +396,7 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              type.displayName,
+                              dispName,
                               style: TextStyle(
                                 color: isSelected ? Colors.white : Colors.white70,
                                 fontSize: 16,
@@ -359,10 +456,10 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
               
               const SizedBox(height: 8),
               
-              const Center(
+              Center(
                 child: Text(
-                  'Tap to change photo',
-                  style: TextStyle(
+                  _photoChangeLabel,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                   ),
@@ -376,9 +473,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                 controller: _nameController,
                 style: const TextStyle(color: Colors.white, fontSize: 20),
                 decoration: InputDecoration(
-                  labelText: 'Label',
+                  labelText: _nameChangeSubtitle,
                   labelStyle: const TextStyle(color: Colors.white70, fontSize: 18),
-                  hintText: 'Enter button label',
+                  hintText: _nameChangeGuide,
                   hintStyle: const TextStyle(color: Colors.white30),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.1),
@@ -414,9 +511,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                     child: ElevatedButton.icon(
                       onPressed: _delete,
                       icon: const Icon(Icons.delete, size: 24),
-                      label: const Text(
-                        'Delete',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      label: Text(
+                        _deleteFunctionLabel,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red.shade700,
@@ -436,9 +533,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                     child: ElevatedButton.icon(
                       onPressed: _save,
                       icon: const Icon(Icons.save, size: 24),
-                      label: const Text(
-                        'Save',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      label: Text(
+                        _saveFunctionLabel,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green.shade700,
@@ -463,9 +560,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
     switch (_selectedFunction) {
       case FunctionType.contact:
         return [
-          const Text(
-            'MESSAGING APP',
-            style: TextStyle(
+          Text(
+            _messagingAppSubtitle,
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -478,13 +575,22 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
             runSpacing: 8,
             children: [AppType.whatsapp, AppType.wechat]
                 .map((appType) {
-              final isSelected = _selectedAppType == appType;
+                  String appDispName = "";
+                  final isSelected = _selectedAppType == appType;
+                    if (appType == AppType.whatsapp){
+                      appDispName = _whatsappDispName;
+                    } else if (appType == AppType.wechat) {
+                      appDispName = _wechatDispName;
+                    } else {
+                      appDispName = "???";
+                    }
               return GestureDetector(
                 onTap: () {
                   setState(() {
                     _selectedAppType = appType;
                   });
                 },
+
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
@@ -496,7 +602,7 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
                     ),
                   ),
                   child: Text(
-                    appType.displayName,
+                    appDispName,
                     style: TextStyle(
                       color: isSelected ? Colors.white : Colors.white70,
                       fontSize: 16,
@@ -513,9 +619,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
             keyboardType: TextInputType.phone,
             style: const TextStyle(color: Colors.white, fontSize: 20),
             decoration: InputDecoration(
-              labelText: 'Phone Number (Hong Kong)',
+              labelText: _phoneNumberSubtitle,
               labelStyle: const TextStyle(color: Colors.white70, fontSize: 18),
-              hintText: '53328609',
+              hintText: _phoneNumberGuide,
               hintStyle: const TextStyle(color: Colors.white30),
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.1),
@@ -545,9 +651,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.blue, width: 2),
             ),
-            child: const Text(
-              '📢 This button will speak the current date and time when pressed.',
-              style: TextStyle(
+            child: Text(
+              _timeDateDescription,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
               ),
@@ -564,9 +670,9 @@ class _ContactEditorDialogState extends State<ContactEditorDialog> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.orange, width: 2),
             ),
-            child: const Text(
-              '📢 This button will speak the current weather forecast. Location permission required.',
-              style: TextStyle(
+            child: Text(
+              _weatherDescription,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
               ),
