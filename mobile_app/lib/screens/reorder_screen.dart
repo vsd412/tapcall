@@ -12,6 +12,7 @@ library;
 import 'package:flutter/material.dart';
 import '../src/contact_manager.dart';
 import '../src/function_type.dart';
+import '../src/translations.dart';
 
 class ReorderScreen extends StatefulWidget {
   const ReorderScreen({super.key});
@@ -26,10 +27,54 @@ class _ReorderScreenState extends State<ReorderScreen> {
   List<int> _originalSlots = [];
   bool _isLoading = true;
   bool _hasChanges = false;
+  String _reorderScreenTitle = "";
+  String _reorderDiscardTitle = "";
+  String _reorderDiscardDescription = "";
+  String _reorderCancelLabel = "";
+  String _reorderDiscardLabel = "";
+  String _reorderSaveLabel = "";
+  String _reorderEmptyTitle = "";
+  String _reorderEmptyDescription = "";
+  String _reorderScreenDescription = "";
+  String _timeDateDescription = "";
+  String _weatherDescription = "";
+  String _emptySlotLabel = "";
 
   @override
   void initState() {
     super.initState();
+    Future<void> loadTranslations() async {
+      final results = await Future.wait([
+        Translations.get('reorderScreenTitle'),
+        Translations.get('reorderDiscardTitle'),
+        Translations.get('reorderDiscardDescription'),
+        Translations.get('reorderCancelLabel'),
+        Translations.get('reorderDiscardLabel'),
+        Translations.get('reorderSaveLabel'),
+        Translations.get('reorderEmptyTitle'),
+        Translations.get('reorderEmptyDescription'),
+        Translations.get('reorderScreenDescription'),
+        Translations.get('timeDateDescription'),
+        Translations.get('weatherDescription'),
+        Translations.get('emptySlotLabel'),
+      ]);
+
+      setState(() {
+        _reorderScreenTitle      = results[0];
+        _reorderDiscardTitle     = results[1];
+        _reorderDiscardDescription = results[2];
+        _reorderCancelLabel      = results[3];
+        _reorderDiscardLabel     = results[4];
+        _reorderSaveLabel        = results[5];
+        _reorderEmptyTitle       = results[6];
+        _reorderEmptyDescription = results[7];
+        _reorderScreenDescription = results[8];
+        _timeDateDescription = results[9];
+        _weatherDescription = results[10];
+        _emptySlotLabel = results[11];
+      });
+    }
+    loadTranslations();
     _loadItems();
   }
 
@@ -121,22 +166,22 @@ class _ReorderScreenState extends State<ReorderScreen> {
           context: context,
           builder: (context) => AlertDialog(
             backgroundColor: const Color(0xFF2C3E50),
-            title: const Text(
-              'Discard Changes?',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            title: Text(
+              _reorderDiscardTitle,
+              style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            content: const Text(
-              'You have unsaved changes. Do you want to discard them?',
-              style: TextStyle(color: Colors.white70, fontSize: 18),
+            content: Text(
+              _reorderDiscardDescription,
+              style: const TextStyle(color: Colors.white70, fontSize: 18),
             ),
             actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.white70, fontSize: 18)),
+                  child: Text(_reorderCancelLabel, style: const TextStyle(color: Colors.white70, fontSize: 18)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Discard', style: TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: Text(_reorderDiscardLabel, style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -149,7 +194,7 @@ class _ReorderScreenState extends State<ReorderScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFF34495E),
         appBar: AppBar(
-          backgroundColor: const Color(0xFF2C3E50),
+          backgroundColor: const Color.fromARGB(255,35,40,50),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
@@ -159,22 +204,22 @@ class _ReorderScreenState extends State<ReorderScreen> {
                   context: context,
                   builder: (context) => AlertDialog(
                     backgroundColor: const Color(0xFF2C3E50),
-                    title: const Text(
-                      'Discard Changes?',
-                      style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    title: Text(
+                      _reorderDiscardTitle,
+                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                     ),
-                    content: const Text(
-                      'You have unsaved changes. Do you want to discard them?',
-                      style: TextStyle(color: Colors.white70, fontSize: 18),
+                    content: Text(
+                      _reorderDiscardDescription,
+                      style: const TextStyle(color: Colors.white70, fontSize: 18),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel', style: TextStyle(color: Colors.white70, fontSize: 18)),
+                        child: Text(_reorderCancelLabel, style: const TextStyle(color: Colors.white70, fontSize: 18)),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Discard', style: TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: Text(_reorderDiscardLabel, style: const TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -189,9 +234,9 @@ class _ReorderScreenState extends State<ReorderScreen> {
               }
             },
           ),
-          title: const Text(
-            'Reorder Functions',
-            style: TextStyle(
+          title: Text(
+            _reorderScreenTitle,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -201,10 +246,10 @@ class _ReorderScreenState extends State<ReorderScreen> {
             if (_hasChanges)
               TextButton(
                 onPressed: _saveOrder,
-                child: const Text(
-                  'Save',
-                  style: TextStyle(
-                    color: Color(0xFF3498DB),
+                child: Text(
+                  _reorderSaveLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -215,20 +260,20 @@ class _ReorderScreenState extends State<ReorderScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _items.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.inbox_outlined, size: 80, color: Colors.white38),
-                        SizedBox(height: 16),
+                        const Icon(Icons.inbox_outlined, size: 80, color: Colors.white38),
+                        const SizedBox(height: 16),
                         Text(
-                          'No functions added yet',
-                          style: TextStyle(color: Colors.white70, fontSize: 20),
+                          _reorderEmptyTitle,
+                          style: const TextStyle(color: Colors.white70, fontSize: 20),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
-                          'Add contacts or functions in Settings',
-                          style: TextStyle(color: Colors.white38, fontSize: 16),
+                          _reorderEmptyDescription,
+                          style: const TextStyle(color: Colors.white38, fontSize: 16),
                         ),
                       ],
                     ),
@@ -244,7 +289,7 @@ class _ReorderScreenState extends State<ReorderScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'Drag items to reorder. Gaps mark every 3 items (1 page).',
+                                _reorderScreenDescription,
                                 style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 16),
                               ),
                             ),
@@ -342,7 +387,7 @@ class _ReorderScreenState extends State<ReorderScreen> {
                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       Text(
-                                                        item.name.isEmpty ? item.functionType.displayName : item.name,
+                                                        item.name.isEmpty ? _emptySlotLabel : item.name,
                                                         style: const TextStyle(
                                                           color: Colors.white,
                                                           fontSize: 20,
@@ -351,9 +396,10 @@ class _ReorderScreenState extends State<ReorderScreen> {
                                                       ),
                                                       const SizedBox(height: 4),
                                                       Text(
-                                                        item.functionType == FunctionType.contact
-                                                            ? '${item.phoneNumber ?? ''} • ${item.appType.displayName}'
-                                                            : item.functionType.description,
+                                                        item.functionType == FunctionType.contact ? '${item.phoneNumber ?? ''} • ${item.appType.displayName}'
+                                                            : item.functionType == FunctionType.time ? _timeDateDescription
+                                                            : item.functionType == FunctionType.weather ? _weatherDescription
+                                                            : '???',
                                                         style: const TextStyle(
                                                           color: Colors.white70,
                                                           fontSize: 16,
