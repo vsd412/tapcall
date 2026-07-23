@@ -53,7 +53,26 @@ class Translations {
     
     return _replaceParams(text, params);
   }
-  
+
+  static Future<String> getTTS2(String key, {Map<String, String>? params}) async {
+    final language = await Language.getLanguage();
+
+    String text;
+    switch (language) {
+      case TTSLanguage.traditionalChinese:
+        text = _traditionalChinese[key] ?? key;
+        break;
+      case TTSLanguage.simplifiedChinese:
+        text = _simplifiedChinese[key] ?? key;
+        break;
+      case TTSLanguage.english:
+        text = _english[key] ?? key;
+        break;
+    }
+
+    return _replaceParams(text, params);
+  }
+
   // Replace parameters in translated text
   static String _replaceParams(String text, Map<String, String>? params) {
     if (params == null) return text;
@@ -191,6 +210,39 @@ class Translations {
     // SOS Emergency
     'sos_emergency': 'SOS Emergency',
     'sos_description': 'Button 9 will directly call this contact',
+
+    // Contact App Names
+    'whatsappDispName': 'Whatsapp',
+    'wechatDispName': 'WeChat',
+
+    // Bluetooth Manager
+    'bluetoothDeviceTitle': 'Bluetooth Device Manager',
+    'bluetoothDeviceScan': 'Scan for Devices',
+    'bluetoothDeviceScanning': 'Scanning...',
+    'bluetoothDeviceEmpty': 'No devices found.\n\nTap "Scan for Devices" to search,\nor check that your ESP32 is powered on.',
+    'bluetoothDeviceUnknown': 'Unknown Device',
+    'bluetoothDeviceSignal': 'Signal',
+    'bluetoothDeviceClose': 'Close',
+    'bluetoothDeviceConnected': 'Connected Device',
+    'bluetoothDeviceName': 'Device Name:',
+
+    // Main Call Screen
+    'pageNumberPrefix': 'Page',
+    'pageNumberSuffix': 'Blank',
+    'firstPageWarning': 'Already at first page',
+    'lastPageWarning': 'Already at last page',
+    'buttonFunctionMissing': 'No function set for this button',
+    'buttonPhoneMissing': 'No phone number set for this button',
+    'buttonCalling': 'Now Calling',
+    'buttonCallFailed': 'Failed to call',
+    'buttonSOSMissing': 'The SOS function has not been setup',
+    'buttonSOSCalling': 'SOS calling',
+
+    // Notifications
+    'callReadyTitle': 'Call Service Active',
+    'callReadyDescription': 'Press buttons in the TapCall App to start calling contacts.',
+    'deviceConnectedTitle': 'Connected to',
+    'deviceConnectedDescription': 'You can use your ESP32 controller for calling.',
   };
   
   // Traditional Chinese (Hong Kong/Taiwan)
@@ -254,6 +306,39 @@ class Translations {
     // SOS Emergency
     'sos_emergency': '緊急求救',
     'sos_description': '按第 9 號按鈕會直接打電話俾呢個聯絡人',
+
+    // Contact App Names
+    'whatsappDispName': 'Whatsapp',
+    'wechatDispName': '微信',
+
+    // Bluetooth Manager
+    'bluetoothDeviceTitle': '管理藍牙裝置',
+    'bluetoothDeviceScan': '搜尋藍牙裝置',
+    'bluetoothDeviceScanning': '搜尋中...',
+    'bluetoothDeviceEmpty': '未找到藍牙裝置。\n\n請按「搜尋藍牙裝置」按鈕，\n或檢查你的 ESP32 是否已啟動。',
+    'bluetoothDeviceUnknown': '不明裝置',
+    'bluetoothDeviceSignal': '訊號',
+    'bluetoothDeviceClose': '返回',
+    'bluetoothDeviceConnected': '已連接裝置',
+    'bluetoothDeviceName': '裝置名字',
+
+    // Main Call Screen
+    'pageNumberPrefix': '第',
+    'pageNumberSuffix': '頁',
+    'firstPageWarning': '已經喺第一頁。',
+    'lastPageWarning': '已經喺最後一頁。',
+    'buttonFunctionMissing': '按鈕未有功能設定。',
+    'buttonPhoneMissing': '按鈕沒有設定電話號碼。',
+    'buttonCalling': '依家致電',
+    'buttonCallFailed': '未能致電',
+    'buttonSOSMissing': '未設置緊急SOS功能',
+    'buttonSOSCalling': '緊急致電',
+
+    // Notifications
+    'callReadyTitle': '已啟動致電功能',
+    'callReadyDescription': '按TapCall程式內的按鈕開始致電聯絡人。',
+    'deviceConnectedTitle': '已連接',
+    'deviceConnectedDescription': '你可以使用ESP32遙控器打電話。',
   };
   
   // Simplified Chinese (Mainland China)
@@ -317,6 +402,39 @@ class Translations {
     // SOS Emergency
     'sos_emergency': '紧急求救',
     'sos_description': '按第 9 号按钮会直接拨打此联系人',
+
+    // Contact App Names
+    'whatsappDispName': 'Whatsapp',
+    'wechatDispName': '微信',
+
+    // Bluetooth Manager
+    'bluetoothDeviceTitle': '管理蓝牙装置',
+    'bluetoothDeviceScan': '搜寻蓝牙装置',
+    'bluetoothDeviceScanning': '搜寻中...',
+    'bluetoothDeviceEmpty': '未找到蓝牙装置\n\n请按「搜寻蓝牙装置」按钮，\n或檢查你的 ESP32 是否已啟動。',
+    'bluetoothDeviceUnknown': '不明装置',
+    'bluetoothDeviceSignal': '信号',
+    'bluetoothDeviceClose': '返回',
+    'bluetoothDeviceConnected': '已连接装置',
+    'bluetoothDeviceName': '装置名字',
+
+    // Main Call Screen
+    'pageNumberPrefix': '第',
+    'pageNumberSuffix': '頁',
+    'firstPageWarning': '已经在第一页。',
+    'lastPageWarning': '已经在最后一页。',
+    'buttonFunctionMissing': '按钮没有功能设定。',
+    'buttonPhoneMissing': '按钮没有设定电话号码。',
+    'buttonCalling': '现在致电',
+    'buttonCallFailed': '未能致电',
+    'buttonSOSMissing': '没有设定紧急SOS功能',
+    'buttonSOSCalling': '紧急SOS',
+
+    // Notifications
+    'callReadyTitle': '已启动致电功能',
+    'callReadyDescription': '按TapCall程式内的按钮开始致电联络人。',
+    'deviceConnectedTitle': '已连接',
+    'deviceConnectedDescription': '你可以使用ESP32遥控器打电话。',
   };
   
   // TTS translations (voice announcements) - English
