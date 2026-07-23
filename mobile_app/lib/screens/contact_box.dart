@@ -14,6 +14,8 @@ import '../src/function_type.dart';
 /// Compact function box widget for displaying a contact or function slot
 class ContactBox extends StatelessWidget {
   final Contact? contact;
+  final String? displayInfo;
+  final String? emptyInfo;
   final Color slotColor;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
@@ -21,6 +23,8 @@ class ContactBox extends StatelessWidget {
   const ContactBox({
     super.key,
     required this.contact,
+    required this.displayInfo,
+    required this.emptyInfo,
     required this.slotColor,
     required this.onTap,
     this.onDelete,
@@ -55,40 +59,40 @@ class ContactBox extends StatelessWidget {
               ),
               child: contact?.photoPath != null && contact!.photoPath!.isNotEmpty
                   ? ClipOval(
-                      child: Image.file(
-                        File(contact!.photoPath!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Text(
-                              contact!.functionType.icon,
-                              style: const TextStyle(
-                                fontSize: 28,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    )
-                  : Center(
+                child: Image.file(
+                  File(contact!.photoPath!),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
                       child: Text(
-                        contact?.functionType.icon ?? '?',
+                        displayInfo ?? "???",
                         style: const TextStyle(
                           fontSize: 28,
                         ),
                       ),
-                    ),
+                    );
+                  },
+                ),
+              )
+                  : Center(
+                child: Text(
+                  contact?.functionType.icon ?? '?',
+                  style: const TextStyle(
+                    fontSize: 28,
+                  ),
+                ),
+              ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Contact info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hasContact ? contact!.name : 'Empty Slot',
+                    hasContact ? contact!.name : (emptyInfo ?? "???"),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -108,7 +112,7 @@ class ContactBox extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            contact!.functionType.displayName,
+                            displayInfo ?? "???",
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 16,
@@ -121,14 +125,14 @@ class ContactBox extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Edit icon
             const Icon(
               Icons.edit,
               color: Colors.white,
               size: 32,
             ),
-            
+
             // Delete button (show only if onDelete is provided)
             if (onDelete != null) ...[
               const SizedBox(width: 12),
