@@ -33,10 +33,10 @@ class MainCallScreen extends StatefulWidget {
   final VoidCallback? onBluetoothTap;
   final Function(int)? onButtonPress;
   final Function(Function(int))? onRegisterCallback;
-  
+
   const MainCallScreen({
-    super.key, 
-    this.isConnected = false, 
+    super.key,
+    this.isConnected = false,
     this.onBluetoothTap,
     this.onButtonPress,
     this.onRegisterCallback,
@@ -51,7 +51,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
   final TTS _tts = TTS();
   final Location _location = Location();
   final Weather _weather = Weather();
-  
+
   int _currentPage = 0;
   List<Contact?> _allContacts = []; // All existing contacts
   List<int> _allSlotNumbers = []; // Corresponding slot numbers
@@ -68,6 +68,67 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
   static const _actionCooldown = Duration(seconds: 3);
   bool _callbackRegistered = false; // Prevent double registration
 
+  String _pageNumberPrefix = "";
+  String _pageNumberSuffix = "";
+  String _firstPageWarning = "";
+  String _lastPageWarning = "";
+  String _buttonFunctionMissing = "";
+  String _buttonPhoneMissing = "";
+  String _buttonCalling = "";
+  String _buttonCallFailed = "";
+
+  String _pageNumberPrefixTTS = "";
+  String _pageNumberSuffixTTS = "";
+  String _firstPageWarningTTS = "";
+  String _lastPageWarningTTS = "";
+  String _buttonFunctionMissingTTS = "";
+  String _buttonPhoneMissingTTS = "";
+  String _buttonCallingTTS = "";
+  String _buttonCallFailedTTS = "";
+
+  Future<void> _loadTranslations() async {
+    final results = await Future.wait([
+      Translations.get('pageNumberPrefix'),
+      Translations.get('pageNumberSuffix'),
+      Translations.get('firstPageWarning'),
+      Translations.get('lastPageWarning'),
+      Translations.get('buttonFunctionMissing'),
+      Translations.get('buttonPhoneMissing'),
+      Translations.get('buttonCalling'),
+      Translations.get('buttonCallFailed'),
+
+      Translations.getTTS2('pageNumberPrefix'),
+      Translations.getTTS2('pageNumberSuffix'),
+      Translations.getTTS2('firstPageWarning'),
+      Translations.getTTS2('lastPageWarning'),
+      Translations.getTTS2('buttonFunctionMissing'),
+      Translations.getTTS2('buttonPhoneMissing'),
+      Translations.getTTS2('buttonCalling'),
+      Translations.getTTS2('buttonCallFailed'),
+    ]);
+
+    setState(() {
+      _pageNumberPrefix = results[0];
+      _pageNumberSuffix = results[1];
+      _firstPageWarning = results[2];
+      _lastPageWarning = results[3];
+      _buttonFunctionMissing = results[4];
+      _buttonPhoneMissing = results[5];
+      _buttonCalling = results[6];
+      _buttonCallFailed = results[7];
+
+      _pageNumberPrefixTTS = results[8];
+      _pageNumberSuffixTTS = results[9];
+      _firstPageWarningTTS = results[10];
+      _lastPageWarningTTS = results[11];
+      _buttonFunctionMissingTTS = results[12];
+      _buttonPhoneMissingTTS = results[13];
+      _buttonCallingTTS = results[14];
+      _buttonCallFailedTTS = results[15];
+    });
+
+  }
+
   @override
   void initState() {
     // Lifecycle setup: observe app state, initial loads, register BLE callback
@@ -76,22 +137,23 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
     _loadContacts();
     _checkAccessibility();
     _checkLocation();
-    
+    _loadTranslations();
+
     // Register this screen's _handleBLEButtonPress with the wrapper (ONCE)
     if (!_callbackRegistered) {
       widget.onRegisterCallback?.call(_handleBLEButtonPress);
       _callbackRegistered = true;
       debugPrint('🔗 MainCallScreen callback registered (hashCode: ${hashCode})');
     }
-    
+
     // Check statuses periodically (2 seconds for more responsive accessibility checks)
     _accessibilityCheckTimer = Timer.periodic(
       const Duration(seconds: 2),
-      (_) => _checkAccessibility(),
+          (_) => _checkAccessibility(),
     );
     _locationCheckTimer = Timer.periodic(
       const Duration(seconds: 5),
-      (_) => _checkLocation(),
+          (_) => _checkLocation(),
     );
   }
 
@@ -132,11 +194,11 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
   Future<void> _loadContacts() async {
     debugPrint('═══ Loading Contacts ═══');
     await _contactManager.loadContacts();
-    
+
     // Collect all slots that have contacts stored
     List<Contact?> loadedContacts = [];
     List<int> loadedSlotNumbers = [];
-    
+
     for (int slot = 1; slot <= 100; slot++) {
       final contact = _contactManager.getContact(slot);
       if (contact != null) {
@@ -145,21 +207,21 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
         debugPrint('Found slot $slot: ${contact.name} (${contact.functionType.name})');
       }
     }
-    
+
     debugPrint('Total slots loaded: ${loadedSlotNumbers.length}');
     debugPrint('Slot numbers: $loadedSlotNumbers');
-    
+
     setState(() {
       _allContacts = loadedContacts;
       _allSlotNumbers = loadedSlotNumbers;
       _totalPages = _allContacts.isEmpty ? 1 : ((_allContacts.length - 1) ~/ 3) + 1;
       _updateCurrentContacts();
     });
-    
+
     debugPrint('Total pages: $_totalPages');
     debugPrint('Current page: $_currentPage');
     debugPrint('Display order (slot numbers): $_allSlotNumbers');
-    
+
     // Debug: Show what's in each display position
     for (int i = 0; i < _allSlotNumbers.length; i++) {
       final slot = _allSlotNumbers[i];
@@ -180,7 +242,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
     debugPrint('║ Slot Number: $slotNumber');
     debugPrint('║ hashCode: ${hashCode}');
     debugPrint('╚═══════════════════════════════════════════════════════════');
-    
+
     // Handle navigation signals from physical buttons
     // Note: Button 253 (GPIO 9) is now handled as SOS in main.dart, not passed here
     if (slotNumber == -1) {
@@ -189,12 +251,12 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
       final oldPage = _currentPage;
       _previousPage();
       if (_currentPage < oldPage) {
-        await _tts.speak('Previous page. Page ${_currentPage + 1}');
-        _showMessage('◀️ Page ${_currentPage + 1} of $_totalPages', Colors.blue.shade700);
+        await _tts.speak('$_pageNumberPrefixTTS ${_currentPage + 1} $_pageNumberSuffixTTS');
+        _showMessage('◀️ $_pageNumberPrefix ${_currentPage + 1}/$_totalPages $_pageNumberSuffix', Colors.blue.shade700);
         debugPrint('✅ Moved to page ${_currentPage + 1}');
       } else {
-        await _tts.speak('Already at first page');
-        _showMessage('⚠️ Already at first page', Colors.orange.shade700);
+        await _tts.speak(_firstPageWarningTTS);
+        _showMessage('⚠️ $_firstPageWarning', Colors.orange.shade700);
         debugPrint('⚠️ Already at first page');
       }
       return;
@@ -205,17 +267,17 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
       final oldPage = _currentPage;
       _nextPage();
       if (_currentPage > oldPage) {
-        await _tts.speak('Next page. Page ${_currentPage + 1}');
-        _showMessage('▶️ Page ${_currentPage + 1} of $_totalPages', Colors.blue.shade700);
+        await _tts.speak('$_pageNumberPrefixTTS ${_currentPage + 1} $_pageNumberSuffixTTS');
+        _showMessage('▶️ $_pageNumberPrefix ${_currentPage + 1}/$_totalPages $_pageNumberSuffix', Colors.blue.shade700);
         debugPrint('✅ Moved to page ${_currentPage + 1}');
       } else {
-        await _tts.speak('Already at last page');
-        _showMessage('⚠️ Already at last page', Colors.orange.shade700);
+        await _tts.speak(_lastPageWarningTTS);
+        _showMessage('⚠️ $_lastPageWarning', Colors.orange.shade700);
         debugPrint('⚠️ Already at last page (page ${_currentPage + 1} of $_totalPages)');
       }
       return;
     }
-    
+
     // Function buttons (1-3)
     // Map physical button (1-3) to current page's displayed slot
     // Button 1 -> first slot on current page
@@ -224,11 +286,11 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
     if (slotNumber >= 1 && slotNumber <= 3) {
       final pageStartIndex = _currentPage * 3;
       final actualIndex = pageStartIndex + (slotNumber - 1);
-      
+
       if (actualIndex < _allSlotNumbers.length) {
         final actualSlot = _allSlotNumbers[actualIndex];
         debugPrint('Physical button $slotNumber → Page slot index $actualIndex → Actual slot $actualSlot');
-        
+
         // CRITICAL: Check cooldown BEFORE loading contacts to prevent double-trigger
         final now = DateTime.now();
         if (_lastActionTime != null && _lastActionSlot == actualSlot) {
@@ -238,35 +300,35 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
             return;
           }
         }
-        
+
         // Update cooldown tracking immediately
         _lastActionTime = now;
         _lastActionSlot = actualSlot;
-        
+
         // Reload contacts to ensure we have latest data
         await _contactManager.loadContacts();
-        
+
         // Find contact for this slot number
         final contact = _contactManager.getContact(actualSlot);
         debugPrint('Contact found: ${contact != null ? contact.name : "NULL"}');
         debugPrint('Contact type: ${contact?.functionType.name}');
-        
+
         if (contact != null) {
           debugPrint('✅ FOUND Contact: ${contact.name} (${contact.functionType.name})');
           debugPrint('🔥 CALLING _makeCall - THIS SHOULD ONLY APPEAR ONCE');
           await _makeCall(contact);
         } else {
           debugPrint('No contact found for actual slot $actualSlot');
-          await _tts.speak('No function set');
-          _showMessage('No function set for this button', Colors.orange.shade700);
+          await _tts.speak(_buttonFunctionMissingTTS);
+          _showMessage(_buttonFunctionMissing, Colors.orange.shade700);
         }
       } else {
         debugPrint('Button $slotNumber pressed but no slot at page index $actualIndex');
-        await _tts.speak('Empty slot');
+        await _tts.speak(_buttonFunctionMissingTTS);
       }
       return;
     }
-    
+
     // If we reach here, button number is invalid (should never happen)
     debugPrint('⚠️ WARNING: Unexpected button number $slotNumber');
   }
@@ -316,8 +378,8 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
   Future<void> _makeCall(Contact? contact) async {
     // Dispatch to the appropriate handler based on `FunctionType`
     if (contact == null) {
-      await _tts.speak(await Translations.get('no_function'));
-      _showMessage('No function set', Colors.orange.shade700);
+      await _tts.speak(_buttonFunctionMissingTTS);
+      _showMessage(_buttonFunctionMissing, Colors.orange.shade700);
       return;
     }
 
@@ -338,67 +400,65 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
   Future<void> _executeContact(Contact contact) async {
     // Contact flow: speak “Calling <name>”, reset accessibility, launch app
     if (contact.phoneNumber == null || contact.phoneNumber!.isEmpty) {
-      final msg = await Translations.get('no_phone_number');
-      _showMessage(msg, Colors.orange.shade700);
-      await _tts.speak(msg);
+      _showMessage(_buttonPhoneMissing, Colors.orange.shade700);
+      await _tts.speak(_buttonPhoneMissingTTS);
       return;
     }
 
     try {
-      final callingMsg = await Translations.calling(contact.name);
-      _showMessage(callingMsg, const Color(0xFF3498DB));
-      
+      _showMessage('$_buttonCalling ${contact.name}', const Color(0xFF3498DB));
+
       // Reset accessibility service immediately before launching
       debugPrint('🔄 Resetting accessibility state right before URL launch...');
       await AccessibilityService.resetCallState();
-      
+
       // Start call immediately (non-blocking)
       final callFuture = AppLauncher.makeCall(
         contact.appType,
         contact.phoneNumber!,
         '852',
       );
-      
+
       // Speak while WhatsApp is loading
-      await _tts.speak(callingMsg);
-      
+      await _tts.speak('$_buttonCallingTTS ${contact.name}');
+
       // Set up error timeout - if call doesn't establish in 12 seconds, show error
       bool callSucceeded = false;
       Timer? errorTimer;
-      
+
       errorTimer = Timer(const Duration(seconds: 12), () async {
         if (!callSucceeded) {
           debugPrint('❌ Call timeout - likely failed to connect');
-          const errorMsg = 'Call timeout. Please try again.';
-          _showMessage(errorMsg, Colors.red.shade700);
-          await _tts.speak(errorMsg);
+          _showMessage('$_buttonCallFailed ${contact.name}', Colors.red.shade700);
+          await _tts.speak('$_buttonCallFailedTTS ${contact.name}');
+
           // Return to app after error
           await Future.delayed(const Duration(seconds: 2));
+
           if (mounted) {
             // This doesn't actually bring app to foreground, but shows intent
             debugPrint('⬅️  Returning to app after error');
           }
         }
       });
-      
+
       // Wait for call to complete
       await callFuture;
       callSucceeded = true;
       errorTimer.cancel();
     } catch (e) {
-      final failMsg = await Translations.get('call_failed');
-      _showMessage('$failMsg: ${contact.name}', Colors.red.shade700);
-      await _tts.speak('$failMsg ${contact.name}');
+      _showMessage('$_buttonCallFailed ${contact.name}', Colors.red.shade700);
+      await _tts.speak('$_buttonCallFailedTTS ${contact.name}');
       debugPrint('Failed to call ${contact.name}: $e');
     }
   }
 
   Future<void> _executeTimeAnnouncement() async {
     final now = DateTime.now();
-    
+
     // Get language-specific announcement
     final announcement = await Translations.getTimeAnnouncement(now);
-    
+
     _showMessage(announcement, const Color(0xFF3498DB));
     await _tts.speak(announcement);
   }
@@ -455,7 +515,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
 
   Widget _buildElderlyContactButton(Contact? contact, Color backgroundColor) {
     final hasContact = contact != null;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
@@ -508,34 +568,34 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                     ),
                     child: contact?.photoPath != null && contact!.photoPath!.isNotEmpty
                         ? ClipOval(
-                            child: Image.file(
-                              File(contact.photoPath!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Center(
-                                  child: Text(
-                                    contact.functionType.icon,
-                                    style: const TextStyle(
-                                      fontSize: 60,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          )
-                        : Center(
+                      child: Image.file(
+                        File(contact.photoPath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
                             child: Text(
-                              contact?.functionType.icon ?? '?',
+                              contact.functionType.icon,
                               style: const TextStyle(
                                 fontSize: 60,
                               ),
                             ),
-                          ),
+                          );
+                        },
+                      ),
+                    )
+                        : Center(
+                      child: Text(
+                        contact?.functionType.icon ?? '?',
+                        style: const TextStyle(
+                          fontSize: 60,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                
+
                 const SizedBox(width: 20),
-                
+
                 // Right side: Label text
                 Expanded(
                   child: Center(
@@ -543,7 +603,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                       builder: (context, constraints) {
                         final text = contact?.name ?? 'Not Set';
                         final isSingleWord = !text.contains(' ');
-                        
+
                         if (isSingleWord) {
                           // Single word: use FittedBox to shrink font if needed
                           return FittedBox(
@@ -577,7 +637,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(width: 16),
               ],
             ),
@@ -592,21 +652,21 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
       _settingsHoldStarted = true;
       _settingsHoldProgress = 0;
     });
-    
+
     _holdTimer();
   }
 
   void _holdTimer() async {
     for (int i = 0; i <= 30; i++) {
       if (!_settingsHoldStarted) break;
-      
+
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       if (_settingsHoldStarted && mounted) {
         setState(() {
           _settingsHoldProgress = i;
         });
-        
+
         if (i >= 30) {
           _openSettings();
           break;
@@ -627,14 +687,14 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
       _settingsHoldStarted = false;
       _settingsHoldProgress = 0;
     });
-    
+
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const SettingsScreen(),
       ),
     );
-    
+
     // Force reload contacts after settings to sync with any changes
     debugPrint('Returned from settings, reloading contacts...');
     await _loadContacts();
@@ -694,7 +754,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                   ),
                   */
                   const Spacer(),
-                  
+
                   // Status icons in middle
                   Row(
                     children: [
@@ -718,9 +778,9 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(width: 12),
-                      
+
                       // Accessibility status icon
                       Container(
                         padding: const EdgeInsets.all(10),
@@ -728,7 +788,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                           color: Colors.white.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: _isAccessibilityEnabled ? Colors.blue : Colors.white30,
+                            color: _isAccessibilityEnabled ? Colors.blue : Colors.white30,
                             width: 2,
                           ),
                         ),
@@ -738,9 +798,9 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                           size: 26,
                         ),
                       ),
-                      
+
                       const SizedBox(width: 12),
-                      
+
                       // Location status icon
                       Container(
                         padding: const EdgeInsets.all(10),
@@ -761,9 +821,9 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                       ),
                     ],
                   ),
-                  
+
                   const Spacer(),
-                  
+
                   // Settings button (hold to unlock)
                   GestureDetector(
                     onLongPressStart: (_) => _startSettingsHold(),
@@ -861,9 +921,9 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(width: 20),
-                  
+
                   // Right arrow (NEXT)
                   Expanded(
                     child: GestureDetector(
