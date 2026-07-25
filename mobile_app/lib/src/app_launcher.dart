@@ -143,23 +143,26 @@ class AppLauncher {
       final digitsOnly = fullNumber.replaceAll('+', '');
       
       // URL-encode message to handle special characters, emojis, newlines
-      // Example: "Hello\nWorld" → "Hello%0AWorld"
       final encodedMessage = Uri.encodeComponent(message);
       
       // Build wa.me link with pre-filled message
-      // Format: https://wa.me/<number>?text=<encodedMessage>
       final uri = Uri.parse('https://wa.me/$digitsOnly?text=$encodedMessage');
       
       debugPrint('🔗 WhatsApp message URL: $uri');
       
-      // Check if WhatsApp can be launched
-      if (await canLaunchUrl(uri)) {
-        // Launch WhatsApp with message pre-filled
-        return await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        debugPrint('❌ WhatsApp not available');
-        return false;
+      // Log check but don't block the launch
+      final canLaunch = await canLaunchUrl(uri);
+      debugPrint('🔍 canLaunchUrl check: ${canLaunch ? "✅ YES" : "❌ NO (Attempting force launch anyway)"}');
+      
+      // Try to force launch regardless of the check
+      bool success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      
+      if (!success) {
+        debugPrint('⚠️ Default launch failed, trying fallback mode...');
+        success = await launchUrl(uri, mode: LaunchMode.externalNonBrowserApplication);
       }
+      
+      return success;
     } catch (e) {
       debugPrint('❌ Error sending WhatsApp message: $e');
       return false;
@@ -173,48 +176,16 @@ class AppLauncher {
   /// 
   /// Processing Steps:
   /// 1. Strip all non-digits from both inputs
-  ///    - "852" → "852" (no change)
-  ///    - "533-286-09" → "53328609" (removes dashes)
-  ///    - "+852 (5332) 8609" → "85253328609" (removes formatting)
-  /// 
   /// 2. Remove leading zeros from local number (country-specific convention)
-  ///    - Hong Kong: "053328609" → "53328609"
-  ///    - China: "010-1234-5678" → "101234567" (after stripping)
-  ///    - Many countries use leading 0 for domestic calls, must be removed for international
-  /// 
   /// 3. Combine into international format
-  ///    - Result: "+<countryCode><phoneNumber>"
-  ///    - "852" + "53328609" = "+85253328609"
   /// 
   /// Output Format: E.164 standard (+CC + local digits, no + for WhatsApp URLs)
-  /// 
-  /// Parameters:
-  ///   phoneNumber: Local/raw phone number (may contain formatting)
-  ///   countryCode: Country code (may contain non-digits)
-  /// 
-  /// Returns:
-  ///   String: "+<CC><phone>" in E.164 format
-  ///   If no country code: Returns phone digits only
-  /// 
-  /// Debug Output:
-  /// Logs each step with "Cleaned phone", "Removed leading zeros", "Final number"
-  /// 
-  /// Examples:
-  ///   "53328609" + "852" → "+85253328609"
-  ///   "533-286-09" + "852" → "+85253328609"
-  ///   "0533-286-09" + "852" → "+85253328609"
-  ///   "53328609" + null → "53328609"
   String _buildInternationalNumber(String phoneNumber, String? countryCode) {
     try {
       // Step 1: Extract digits only from phone number
-      // Removes spaces, dashes, parentheses, +, etc.
-      // Input: "533-286-09" or "(5332) 8609" or "+853328609"
-      // Output: "53328609"
       String cleanPhone = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
       
       // Step 1: Extract digits only from country code
-      // Input: "+852" or "852-CC" or "852"
-      // Output: "852"
       String cleanCC = (countryCode ?? '').replaceAll(RegExp(r'[^0-9]'), '');
       
       debugPrint('📝 Phone normalization:');
@@ -222,36 +193,25 @@ class AppLauncher {
       debugPrint('  Cleaned country code: "$cleanCC"');
       
       // Step 2: If no country code provided, return phone number only
-      // (Caller is responsible for providing country code)
       if (cleanCC.isEmpty) {
         debugPrint('  ℹ️ No country code, using phone only: "$cleanPhone"');
         return cleanPhone;
       }
       
       // Step 3: Remove leading zeros from phone number
-      // Why: Most countries use leading 0 for domestic calls only
-      // - Hong Kong: 0-XXXX-XXXX (domestic), +852-XXXX-XXXX (international)
-      // - China: 0XX-XXXX-XXXX (domestic), +86-XX-XXXX-XXXX (international)
-      // - Many others follow this pattern
-      // Without removing leading 0: +85205328609 (WRONG)
-      // After removing: +85253328609 (CORRECT)
       if (cleanPhone.startsWith('0')) {
-        // Replace all leading zeros (handles multiple: "00123" → "123")
         String original = cleanPhone;
         cleanPhone = cleanPhone.replaceFirst(RegExp(r'^0+'), '');
         debugPrint('  ✂️ Removed leading zeros: "$original" → "$cleanPhone"');
       }
       
       // Step 4: Combine country code + phone to form E.164 format
-      // E.164: +<country code><national number>
-      // Example: +85253328609
       String result = '+$cleanCC$cleanPhone';
       debugPrint('  ✅ Final international format: "$result"');
       return result;
       
     } catch (e) {
       debugPrint('❌ Error normalizing phone number: $e');
-      // Fallback: return original phone number
       return phoneNumber;
     }
   }
@@ -264,63 +224,6 @@ class AppLauncher {
   /// 3. App availability check
   /// 4. URL launch attempt
   /// 5. Error logging and recovery
-  /// 
-  /// Logging Format:
-  /// - Structured ASCII boxes with timestamps
-  /// - Emojis for visual scanning
-  /// - Every step logged for debugging
-  /// - Success/failure clearly marked
-  /// - Timing information included
-  /// 
-  /// App-Specific Handling:
-  /// 
-  /// WhatsApp:
-  /// - URL: https://wa.me/<digitsOnly>
-  /// - Digits: International format without +
-  /// - Will open chat screen for recipient
-  /// - User can review and send message
-  /// 
-  /// Phone:
-  /// - URL: tel:+85253328609
-  /// - Format: E.164 with + prefix
-  /// - Opens native dialer with number pre-filled
-  /// - User can review and tap call
-  /// 
-  /// WeChat:
-  /// - URL: weixin://
-  /// - Just opens app to main screen
-  /// - Accessibility service handles finding contact
-  /// - Coordinate-based tapping used for automation
-  /// 
-  /// Parameters:
-  ///   phoneNumber: Local phone number
-  ///   appType: Target app (WhatsApp/Phone/WeChat)
-  ///   countryCode: Country code (optional, used for normalization)
-  /// 
-  /// Returns:
-  ///   true: App launched and URL handled successfully
-  ///   false: App not available or launch failed
-  /// 
-  /// Error Handling:
-  /// - App not installed: canLaunchUrl returns false, logs and continues
-  /// - Exception thrown: Caught, logged, moves to next attempt
-  /// - All methods tried: Returns false
-  /// 
-  /// Performance:
-  /// - canLaunchUrl: Instant check (~5ms)
-  /// - launchUrl: Typically 200-500ms (app launch time varies)
-  /// - Logged timing for diagnostic purposes
-  /// 
-  /// Usage:
-  ///   final launcher = AppLauncher();
-  ///   final success = await launcher.launchCall(
-  ///     '53328609',
-  ///     AppType.whatsapp,
-  ///     countryCode: '852',
-  ///   );
-  ///   if (success) {
-  ///     print('WhatsApp launched');
-  ///   }
   Future<bool> launchCall(String phoneNumber, AppType appType, {String? countryCode}) async {
     try {
       // Log call initiation with structured format
@@ -339,36 +242,21 @@ class AppLauncher {
       debugPrint('📋 Normalized number: "$fullNumber"');
 
       // Generate URL schemes based on target app
-      // Multiple URLs can be tried in case one fails
       List<Uri> attempts = [];
       
       switch (appType) {
         case AppType.whatsapp:
-          // WhatsApp Universal Link format
-          // Documentation: https://www.whatsapp.com/faq/general/26000112
-          // Format: https://wa.me/<phone_number>
-          // Phone number: Digits only (no +, no formatting)
           final digitsOnly = fullNumber.replaceAll('+', '');
           attempts.add(Uri.parse('https://wa.me/$digitsOnly'));
           debugPrint('🔗 WhatsApp URL: https://wa.me/$digitsOnly');
           break;
           
         case AppType.phone:
-          // Native phone dialer URL scheme
-          // Format: tel:<phone_number>
-          // Phone number: E.164 format with + prefix
-          // Device dials number automatically or shows dialer with number pre-filled
           attempts.add(Uri.parse('tel:$fullNumber'));
           debugPrint('📱 Phone URL: tel:$fullNumber');
           break;
           
         case AppType.wechat:
-          // WeChat deep link
-          // Format: weixin://
-          // Note: WeChat does NOT support direct contact calling via URL
-          // This just opens the app to main screen
-          // Accessibility Service then finds contact via coordinate-based clicking
-          // Phone number will be used by accessibility service, not by this URL
           attempts.add(Uri.parse('weixin://'));
           debugPrint('💚 WeChat URL: weixin:// (automation handles contact lookup)');
           break;
@@ -376,31 +264,32 @@ class AppLauncher {
 
       // Try each URL attempt in order
       for (final uri in attempts) {
+        // Log check but do not block execution
+        debugPrint('\n🔍 Checking if device can launch: $uri');
+        final canLaunch = await canLaunchUrl(uri);
+        debugPrint('   App availability check: ${canLaunch ? "✅ YES" : "❌ NO (Attempting force launch anyway)"}');
+        
         try {
-          // Check if device can launch this URL scheme
-          debugPrint('\n🔍 Checking if device can launch: $uri');
-          final canLaunch = await canLaunchUrl(uri);
-          debugPrint('   App availability: ${canLaunch ? "✅ YES" : "❌ NO"}');
+          debugPrint('🚀 Launching URL...');
+          final startTime = DateTime.now();
           
-          if (canLaunch) {
-            // Attempt to launch the URL
-            debugPrint('🚀 Launching URL...');
-            final startTime = DateTime.now();
-            
-            // Launch in external application (not in-app browser)
-            final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
-            
-            final elapsed = DateTime.now().difference(startTime);
-            debugPrint('⏱️ Launch took: ${elapsed.inMilliseconds}ms');
-            debugPrint('📊 Launch result: ${success ? "✅ SUCCESS" : "❌ FAILED"}');
-            
-            if (success) {
-              debugPrint('\n✅ Call successfully initiated!');
-              debugPrint('═══════════════════════════════════════════════════════════\n');
-              return true;
-            }
-          } else {
-            debugPrint('ℹ️ This app is not installed or available');
+          // Force launch in external application
+          bool success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          
+          // Fallback if the strict externalApplication fails
+          if (!success) {
+            debugPrint('⚠️ Default launch failed, trying fallback mode...');
+            success = await launchUrl(uri, mode: LaunchMode.externalNonBrowserApplication);
+          }
+          
+          final elapsed = DateTime.now().difference(startTime);
+          debugPrint('⏱️ Launch took: ${elapsed.inMilliseconds}ms');
+          debugPrint('📊 Launch result: ${success ? "✅ SUCCESS" : "❌ FAILED"}');
+          
+          if (success) {
+            debugPrint('\n✅ Call successfully initiated!');
+            debugPrint('═══════════════════════════════════════════════════════════\n');
+            return true;
           }
           
         } catch (e) {
