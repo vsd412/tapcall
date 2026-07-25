@@ -695,6 +695,7 @@ class _BLEWrapperScreenState extends State<BLEWrapperScreen> {
         if (didPop) return;
         // Move app to background instead of closing
         debugPrint('Back button pressed - moving to background');
+        _loadTranslations();
         // App will stay in background with BLE connection active
       },
       child: MainCallScreen(
