@@ -63,6 +63,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
   bool _isLocationEnabled = false;
   Timer? _accessibilityCheckTimer;
   Timer? _locationCheckTimer;
+  Timer? _translationCheckTimer;
   DateTime? _lastActionTime;
   int? _lastActionSlot;
   static const _actionCooldown = Duration(seconds: 3);
@@ -155,6 +156,10 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
       const Duration(seconds: 5),
           (_) => _checkLocation(),
     );
+     _translationCheckTimer = Timer.periodic(
+      const Duration(seconds: 2),
+          (_) => _loadTranslations(),
+    );
   }
 
   @override
@@ -162,6 +167,7 @@ class _MainCallScreenState extends State<MainCallScreen> with WidgetsBindingObse
     WidgetsBinding.instance.removeObserver(this);
     _accessibilityCheckTimer?.cancel();
     _locationCheckTimer?.cancel();
+    _translationCheckTimer?.cancel();
     super.dispose();
   }
 
