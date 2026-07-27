@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TapCall</string>
+    <string name="accessibility_service_description">Automatically taps the call button in WhatsApp when opened by TapCall. This service only monitors WhatsApp windows and does not access any personal data or messages. Enable this to achieve true one-tap calling.</string>
+</resources>
